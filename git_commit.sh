@@ -27,13 +27,40 @@ function git_commit() {
         fi
     done
 
-    read -p "Do you want to add the author to the commit message? (yes/no): " add_author
-    if [[ "$add_author" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-        if [ -z "$GIT_AUTHOR" ]; then
-            echo "Error: GIT_AUTHOR environment variable is not set."
-            return 1
+    while true; do
+        # Check for spelling errors in the commit message
+        misspelled_words=$(echo "$message" | aspell list)
+        if [[ -n "$misspelled_words" ]]; then
+            echo "The commit message contains spelling errors: $misspelled_words"
+            echo "Options: "
+            echo "1. Proceed with the commit message as is."
+            echo "2. Enter a new commit message."
+            echo "3. Abort."
+            read -p "Choose an option (1/2/3): " option
+            case $option in
+                1)
+                    break
+                    ;;
+                2)
+                    read -p "Enter the new commit message: " message
+                    ;;
+                3)
+                    echo "Commit aborted."
+                    return
+                    ;;
+                *)
+                    echo "Invalid option. Please try again."
+                    ;;
+            esac
+        else
+            echo "Everything is OK with the commit message."
+            break
         fi
-        message="$message - $GIT_AUTHOR"
+    done
+
+    read -p "Do you want to add the author (Mikhail Dorokhovich) to the commit message? (yes/no): " add_author
+    if [[ "$add_author" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+        message="$message - Mikhail Dorokhovich"
     fi
 
     git commit -m "$prefix$message"
