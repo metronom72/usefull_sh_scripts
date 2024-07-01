@@ -35,8 +35,9 @@ function git_commit() {
             echo "Options: "
             echo "1. Proceed with the commit message as is."
             echo "2. Enter a new commit message."
-            echo "3. Abort."
-            read -p "Choose an option (1/2/3): " option
+            echo "3. Autocorrect the commit message."
+            echo "4. Abort."
+            read -p "Choose an option (1/2/3/4): " option
             case $option in
                 1)
                     break
@@ -45,6 +46,20 @@ function git_commit() {
                     read -p "Enter the new commit message: " message
                     ;;
                 3)
+                    corrected_message=$(echo "$message" | aspell -a | awk -F: '/^&/ {print $3}')
+                    if [[ -n "$corrected_message" ]]; then
+                        read -p "Autocorrected message: $corrected_message. Do you want to use this message? (yes/no): " confirm
+                        if [[ "$confirm" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+                            message="$corrected_message"
+                            break
+                        else
+                            echo "Please enter a new commit message."
+                        fi
+                    else
+                        echo "Unable to autocorrect the message."
+                    fi
+                    ;;
+                4)
                     echo "Commit aborted."
                     return
                     ;;
